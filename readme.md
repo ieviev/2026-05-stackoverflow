@@ -23,7 +23,3 @@ or run individual sections:
 ./run.sh redos
 ./run.sh lookaround
 ```
-
-### results
-
-output from benchmarks is written to `results/`.
