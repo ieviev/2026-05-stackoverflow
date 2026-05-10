@@ -67,12 +67,12 @@ fn run_case(c: &Case) {
             let line_bytes: Vec<&[u8]> = lines.iter().map(|l| l.as_bytes()).collect();
             let tf = time(|| {
                 let mut acc = 0usize;
-                for l in lines { if f.is_match(bb(l)).unwrap_or(false) { acc += 1; } }
+                for l in lines { if f.is_match(bb(l)).unwrap() { acc += 1; } }
                 bb(acc);
             });
             let tp = time(|| {
                 let mut acc = 0usize;
-                for &b in &line_bytes { if p.is_match(bb(b)).unwrap_or(false) { acc += 1; } }
+                for &b in &line_bytes { if p.is_match(bb(b)).unwrap() { acc += 1; } }
                 bb(acc);
             });
             let tr = time(|| {
@@ -153,8 +153,8 @@ fn run_lookbehind_scaling() {
         let s = format!("{}SUFFIX", pad.repeat(n));
         let b = s.as_bytes();
         let len = s.len();
-        let tf = time(|| { let _ = bb(f.is_match(bb(&s))); });
-        let tp = time(|| { let _ = bb(p.is_match(bb(b))); });
+        let tf = time(|| { bb(f.is_match(bb(&s)).unwrap()); });
+        let tp = time(|| { bb(p.is_match(bb(b)).unwrap()); });
         let tr = time(|| { bb(r.is_match(bb(b)).unwrap()); });
         print_row(&format!("{n} lines ({len} B)"), &[tf, tp, tr]);
     }
