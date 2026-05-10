@@ -7,7 +7,7 @@
 use std::sync::OnceLock;
 
 use benches::{black_box as bb, print_header, print_row, time, want};
-use fancy_regex::Regex as FancyRe;
+use fancy_regex::{Regex as FancyRe, RegexBuilder as FancyBuild};
 use pcre2::bytes::{Regex as PcreRe, RegexBuilder as PcreBuild};
 use resharp::{Regex as Resharp, RegexOptions};
 
@@ -141,7 +141,7 @@ const CASES: &[Case] = &[
 fn run_lookbehind_scaling() {
     if !want("lookbehind scaling") { return; }
     let pat = r"(?s).*(?<!SUFFIX)$";
-    let f = fc(pat);
+    let f = FancyBuild::new(pat).backtrack_limit(1_000_000_000).build().unwrap();
     let p = pc(pat);
     let r = rs(r"^_*$&~(_*SUFFIX)");
     let pad = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do eiusmod tempor incididunt ut labore ";
@@ -149,15 +149,14 @@ fn run_lookbehind_scaling() {
         "Q16398471 scaling: `.*(?<!SUFFIX)$` on one long line ending with SUFFIX",
         &["fancy", "pcre2", "resharp"],
     );
-    for n in [5] {
-        let s = format!("{}SUFFIX", pad.repeat(n));
-        let b = s.as_bytes();
-        let len = s.len();
-        let tf = time(|| { bb(f.is_match(bb(&s)).unwrap()); });
-        let tp = time(|| { bb(p.is_match(bb(b)).unwrap()); });
-        let tr = time(|| { bb(r.is_match(bb(b)).unwrap()); });
-        print_row(&format!("{n} lines ({len} B)"), &[tf, tp, tr]);
-    }
+    let mut s = pad.repeat(105);
+    s.truncate(10234);
+    s.push_str("SUFFIX");
+    let b = s.as_bytes();
+    let tf = time(|| { bb(f.is_match(bb(&s)).unwrap()); });
+    let tp = time(|| { bb(p.is_match(bb(b)).unwrap()); });
+    let tr = time(|| { bb(r.is_match(bb(b)).unwrap()); });
+    print_row("10 KB", &[tf, tp, tr]);
 }
 
 fn main() {
